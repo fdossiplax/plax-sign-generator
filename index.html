@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Plax Group — Generatore Firma Aziendale</title>
+  <link href="https://fonts.googleapis.com/css2?family=Assistant:wght@400;600;700&display=swap" rel="stylesheet"/>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --plax-blue: #1a3f6f;
+      --plax-blue-dark: #122d52;
+      --plax-yellow: #fdc400;
+      --white: #ffffff;
+      --bg: #f0f2f5;
+      --card-bg: #ffffff;
+      --text: #1a1a2e;
+      --text-muted: #6b7280;
+      --border: #e5e7eb;
+      --radius: 12px;
+      --shadow: 0 4px 24px rgba(26,63,111,0.10);
+    }
+
+    body {
+      font-family: 'Assistant', sans-serif;
+      background: var(--bg);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 2rem 1rem;
+    }
+
+    .header { text-align: center; margin-bottom: 2.5rem; }
+    .header .logo-text {
+      font-size: 13px; font-weight: 700; letter-spacing: 0.18em;
+      text-transform: uppercase; color: var(--plax-blue); margin-bottom: 0.5rem;
+    }
+    .header h1 { font-size: 28px; font-weight: 700; color: var(--text); line-height: 1.2; }
+    .header p { font-size: 15px; color: var(--text-muted); margin-top: 0.4rem; }
+
+    .container {
+      width: 100%; max-width: 980px;
+      display: grid; grid-template-columns: 1fr 1fr;
+      gap: 2rem; align-items: start;
+    }
+    @media (max-width: 720px) { .container { grid-template-columns: 1fr; } }
+
+    .form-card, .preview-card {
+      background: var(--card-bg); border-radius: var(--radius);
+      border: 1px solid var(--border); padding: 2rem; box-shadow: var(--shadow);
+    }
+    .form-card h2, .preview-card h2 {
+      font-size: 16px; font-weight: 700; color: var(--plax-blue);
+      margin-bottom: 1.5rem; padding-bottom: 0.75rem;
+      border-bottom: 2px solid var(--plax-yellow); display: inline-block;
+    }
+
+    .field { margin-bottom: 1.25rem; }
+    .field label {
+      display: block; font-size: 13px; font-weight: 600;
+      color: var(--text-muted); text-transform: uppercase;
+      letter-spacing: 0.06em; margin-bottom: 6px;
+    }
+    .field input, .field select {
+      width: 100%; padding: 10px 14px;
+      font-family: 'Assistant', sans-serif; font-size: 15px;
+      color: var(--text); background: #f8f9fb;
+      border: 1px solid var(--border); border-radius: 8px;
+      outline: none; transition: border-color 0.2s, box-shadow 0.2s;
+    }
+    .field select {
+      appearance: none; -webkit-appearance: none;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%236b7280' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+      background-repeat: no-repeat; background-position: right 14px center;
+      padding-right: 36px; cursor: pointer;
+    }
+    .field input:focus, .field select:focus {
+      border-color: var(--plax-blue);
+      box-shadow: 0 0 0 3px rgba(26,63,111,0.10);
+      background-color: #fff;
+    }
+    .sede-info { margin-top: 6px; min-height: 20px; }
+    .sede-info span {
+      display: inline-block; padding: 2px 10px; border-radius: 20px;
+      background: #eef4ff; color: var(--plax-blue);
+      border: 1px solid #c3d6f5; font-weight: 600;
+      font-size: 11px; letter-spacing: 0.04em;
+    }
+
+    .status-banner {
+      background: #eef4ff; border: 1px solid #c3d6f5; border-radius: 8px;
+      padding: 10px 14px; font-size: 13px; color: var(--plax-blue);
+      margin-bottom: 1.5rem; display: none;
+    }
+    .status-banner.show { display: block; }
+    .status-banner strong { font-weight: 700; }
+
+    .btn-download {
+      width: 100%; padding: 13px; background: var(--plax-blue); color: #fff;
+      font-family: 'Assistant', sans-serif; font-size: 15px; font-weight: 700;
+      border: none; border-radius: 8px; cursor: pointer;
+      transition: background 0.2s, transform 0.1s; letter-spacing: 0.02em;
+    }
+    .btn-download:hover { background: var(--plax-blue-dark); }
+    .btn-download:active { transform: scale(0.98); }
+    .btn-download.loading { opacity: 0.7; pointer-events: none; }
+
+    .canvas-wrap {
+      background: #e8ecf0; border-radius: 8px; padding: 12px;
+      display: flex; justify-content: center; align-items: center;
+    }
+    canvas#preview { border-radius: 6px; width: 100%; height: auto; display: block; }
+    .preview-note { font-size: 12px; color: var(--text-muted); margin-top: 10px; text-align: center; }
+
+    .footer { margin-top: 2.5rem; font-size: 12px; color: var(--text-muted); text-align: center; }
+  </style>
+</head>
+<body>
+
+  <div class="header">
+    <div class="logo-text">Plax Group</div>
+    <h1>Generatore Firma Aziendale</h1>
+    <p>Compila i campi e scarica la tua firma aziendale personalizzata</p>
+  </div>
+
+  <div class="container">
+
+    <div class="form-card">
+      <h2>I tuoi dati</h2>
+
+      <div id="status-banner" class="status-banner">
+        <strong>Dati ricevuti da Zoho Forms.</strong> Verifica e scarica la tua firma aziendale.
+      </div>
+
+      <div class="field">
+        <label>Sede</label>
+        <select id="f-sede" onchange="onSedeChange()">
+          <option value="">— Seleziona la sede —</option>
+          <option value="trezzo">Trezzo sull'Adda (MI) — Italy</option>
+          <option value="zola">Zola Predosa (BO) — Italy</option>
+          <option value="loreto">Loreto (AN) — Italy</option>
+          <option value="arad">Arad — Romania</option>
+          <option value="zaghouan">Zaghouan — Tunisia</option>
+          <option value="benarous">Ben Arous — Tunisia</option>
+          <option value="suzhou">Suzhou — China</option>
+        </select>
+        <div class="sede-info" id="sede-info"></div>
+      </div>
+
+      <div class="field">
+        <label>Nome completo</label>
+        <input type="text" id="f-nome" placeholder="Es. Sara Bindi" oninput="renderPreview()"/>
+      </div>
+      <div class="field">
+        <label>Posizione lavorativa</label>
+        <input type="text" id="f-ruolo" placeholder="Es. Account Manager" oninput="renderPreview()"/>
+      </div>
+      <div class="field">
+        <label>Mobile</label>
+        <input type="text" id="f-mobile" placeholder="Es. +39 327 529 7228" oninput="renderPreview()"/>
+      </div>
+      <div class="field">
+        <label>Email</label>
+        <input type="text" id="f-email" placeholder="Es. nome@plax.it" oninput="renderPreview()"/>
+      </div>
+
+      <button class="btn-download" id="btn-dl" onclick="downloadPNG()">
+        Scarica firma PNG
+      </button>
+    </div>
+
+    <div class="preview-card">
+      <h2>Anteprima</h2>
+      <div class="canvas-wrap">
+        <canvas id="preview" width="900" height="450"></canvas>
+      </div>
+      <p class="preview-note">Il PNG scaricato è in alta risoluzione (2×)</p>
+    </div>
+
+  </div>
+
+  <div class="footer">Plax Group — plax.it</div>
+
+  <script>
+    // ─── Mappa sedi → file PNG ────────────────────────────────────────────────
+    // Per ogni sede carica su GitHub il PNG corrispondente con questo nome file
+    const SEDI = {
+      trezzo:   { label: "Trezzo sull'Adda (MI) · Italy", file: "card-bg-trezzo.png"   },
+      zola:     { label: "Zola Predosa (BO) · Italy",      file: "card-bg-zola.png"     },
+      loreto:   { label: "Loreto (AN) · Italy",            file: "card-bg-loreto.png"   },
+      arad:     { label: "Arad · Romania",                 file: "card-bg-arad.png"     },
+      zaghouan: { label: "Zaghouan · Tunisia",             file: "card-bg-zaghouan.png" },
+      benarous: { label: "Ben Arous · Tunisia",            file: "card-bg-benarous.png" },
+      suzhou:   { label: "Suzhou · China",                 file: "card-bg-suzhou.png"   },
+    };
+
+    const bgCache = {};
+    let currentBg = null;
+
+    function loadBg(sedeKey, callback) {
+      if (!sedeKey) { currentBg = null; callback(); return; }
+      if (bgCache[sedeKey]) { currentBg = bgCache[sedeKey]; callback(); return; }
+      const img = new Image();
+      img.onload  = () => { bgCache[sedeKey] = img; currentBg = img; callback(); };
+      img.onerror = () => { currentBg = null; callback(); };
+      img.src = SEDI[sedeKey].file;
+    }
+
+    function onSedeChange() {
+      const sedeKey = document.getElementById('f-sede').value;
+      const info    = document.getElementById('sede-info');
+      if (sedeKey && SEDI[sedeKey]) {
+        info.innerHTML = '<span>' + SEDI[sedeKey].label + '</span>';
+        loadBg(sedeKey, () => renderPreview());
+      } else {
+        info.innerHTML = '';
+        currentBg = null;
+        renderPreview();
+      }
+    }
+
+    // ─── Parametri URL da Zoho Forms ─────────────────────────────────────────
+    // URL esempio:
+    // https://fdossiplax.github.io/plax-card-generator/?sede=trezzo&nome=Sara+Bindi&ruolo=Account+Manager&mobile=%2B39+327+529+7228&email=s.bindi@plax.it
+    const params   = new URLSearchParams(window.location.search);
+    const fromZoho = params.has('nome') || params.has('email');
+
+    if (fromZoho) {
+      setValue('f-nome',   params.get('nome')   || '');
+      setValue('f-ruolo',  params.get('ruolo')  || '');
+      setValue('f-mobile', params.get('mobile') || '');
+      setValue('f-email',  params.get('email')  || '');
+      const sedeParam = params.get('sede') || '';
+      if (sedeParam && SEDI[sedeParam]) {
+        document.getElementById('f-sede').value = sedeParam;
+        onSedeChange();
+      }
+      document.getElementById('status-banner').classList.add('show');
+    }
+
+    function setValue(id, val) {
+      document.getElementById(id).value = decodeURIComponent(val);
+    }
+
+    // ─── Canvas ───────────────────────────────────────────────────────────────
+    function getData() {
+      return {
+        nome:   document.getElementById('f-nome').value.trim(),
+        ruolo:  document.getElementById('f-ruolo').value.trim(),
+        mobile: document.getElementById('f-mobile').value.trim(),
+        email:  document.getElementById('f-email').value.trim(),
+        sede:   document.getElementById('f-sede').value,
+      };
+    }
+
+    function drawCard(ctx, W, H, d) {
+      if (currentBg && currentBg.naturalWidth > 0) {
+        ctx.drawImage(currentBg, 0, 0, W, H);
+      } else {
+        ctx.fillStyle = '#1a3f6f';
+        ctx.fillRect(0, 0, W * 0.52, H);
+        ctx.fillStyle = '#dde3ec';
+        ctx.fillRect(W * 0.52, 0, W * 0.48, H);
+        ctx.fillStyle = '#fdc400';
+        ctx.fillRect(0, 0, 9, H);
+      }
+      if (d.nome) {
+        ctx.font = 'bold 54px "Assistant", Arial, sans-serif';
+        ctx.fillStyle = '#ffffff';
+        ctx.fillText(d.nome, 52, 122);
+      }
+      if (d.ruolo) {
+        ctx.font = 'bold 33px "Assistant", Arial, sans-serif';
+        ctx.fillStyle = '#fdc400';
+        ctx.fillText(d.ruolo, 52, 170);
+      }
+      if (d.mobile) {
+        ctx.font = '26px "Assistant", Arial, sans-serif';
+        ctx.fillStyle = '#ffffff';
+        ctx.fillText('Mobile: ' + d.mobile, 52, 242);
+      }
+      if (d.email) {
+        ctx.font = '26px "Assistant", Arial, sans-serif';
+        ctx.fillStyle = '#ffffff';
+        ctx.fillText('Email: ' + d.email, 52, 282);
+      }
+    }
+
+    function renderPreview() {
+      const canvas = document.getElementById('preview');
+      const ctx = canvas.getContext('2d');
+      canvas.width = 900; canvas.height = 450;
+      drawCard(ctx, 900, 450, getData());
+    }
+
+    function downloadPNG() {
+      const d = getData();
+      if (!d.sede)             { alert('Seleziona la sede prima di scaricare.');              return; }
+      if (!d.nome && !d.email) { alert("Compila almeno il nome e l'email prima di scaricare."); return; }
+
+      const btn = document.getElementById('btn-dl');
+      btn.textContent = 'Generazione in corso…';
+      btn.classList.add('loading');
+
+      const off = document.createElement('canvas');
+      off.width = 1800; off.height = 900;
+      const ctx = off.getContext('2d');
+      ctx.scale(2, 2);
+      drawCard(ctx, 900, 450, d);
+
+      const link = document.createElement('a');
+      link.download = 'firma_' + (d.nome || 'plax').replace(/\s+/g, '_') + '.png';
+      link.href = off.toDataURL('image/png');
+      link.click();
+
+      setTimeout(() => {
+        btn.textContent = 'Scarica firma PNG';
+        btn.classList.remove('loading');
+      }, 1000);
+    }
+
+    document.fonts.load('bold 54px "Assistant"').then(() => {
+      document.fonts.load('26px "Assistant"').then(() => renderPreview());
+    }).catch(() => renderPreview());
+  </script>
+
+</body>
+</html>
