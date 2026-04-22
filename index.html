@@ -82,6 +82,17 @@
       box-shadow: 0 0 0 3px rgba(26,63,111,0.10);
       background-color: #fff;
     }
+    /* Campo in errore */
+    .field input.error {
+      border-color: #e24b4a;
+      box-shadow: 0 0 0 3px rgba(226,75,74,0.10);
+    }
+    .field .char-counter {
+      display: flex; justify-content: space-between;
+      margin-top: 4px; font-size: 11px; color: var(--text-muted);
+    }
+    .field .char-counter.warn { color: #e24b4a; font-weight: 600; }
+
     .sede-info { margin-top: 6px; min-height: 20px; }
     .sede-info span {
       display: inline-block; padding: 2px 10px; border-radius: 20px;
@@ -152,12 +163,18 @@
 
       <div class="field">
         <label>Nome completo</label>
-        <input type="text" id="f-nome" placeholder="Es. Sara Bindi" oninput="renderPreview()"/>
+        <input type="text" id="f-nome" placeholder="Es. Sara Bindi"
+               maxlength="22" oninput="onInput('f-nome', 'counter-nome', MAX_NOME)"/>
+        <div class="char-counter" id="counter-nome"><span>Max 22 caratteri</span><span>0 / 22</span></div>
       </div>
+
       <div class="field">
         <label>Posizione lavorativa</label>
-        <input type="text" id="f-ruolo" placeholder="Es. Account Manager" oninput="renderPreview()"/>
+        <input type="text" id="f-ruolo" placeholder="Es. Account Manager"
+               maxlength="25" oninput="onInput('f-ruolo', 'counter-ruolo', MAX_RUOLO)"/>
+        <div class="char-counter" id="counter-ruolo"><span>Max 25 caratteri</span><span>0 / 25</span></div>
       </div>
+
       <div class="field">
         <label>Mobile</label>
         <input type="text" id="f-mobile" placeholder="Es. +39 327 529 7228" oninput="renderPreview()"/>
@@ -185,8 +202,27 @@
   <div class="footer">Plax Group — plax.it</div>
 
   <script>
+    // ─── Limiti caratteri ─────────────────────────────────────────────────────
+    const MAX_NOME  = 22;   // corrisponde a "Testststststt" (13) + margine sicuro
+    const MAX_RUOLO = 25;   // corrisponde a "AccountManagerTes" (17) + margine sicuro
+
+    function onInput(inputId, counterId, max) {
+      const input   = document.getElementById(inputId);
+      const counter = document.getElementById(counterId);
+      const len     = input.value.length;
+      const right   = counter.querySelector('span:last-child');
+      right.textContent = len + ' / ' + max;
+      if (len >= max) {
+        counter.classList.add('warn');
+        input.classList.add('error');
+      } else {
+        counter.classList.remove('warn');
+        input.classList.remove('error');
+      }
+      renderPreview();
+    }
+
     // ─── Mappa sedi → file PNG ────────────────────────────────────────────────
-    // Per ogni sede carica su GitHub il PNG corrispondente con questo nome file
     const SEDI = {
       trezzo:   { label: "Trezzo sull'Adda (MI) · Italy", file: "card-bg-trezzo.png"   },
       zola:     { label: "Zola Predosa (BO) · Italy",      file: "card-bg-zola.png"     },
@@ -229,8 +265,8 @@
     const fromZoho = params.has('nome') || params.has('email');
 
     if (fromZoho) {
-      setValue('f-nome',   params.get('nome')   || '');
-      setValue('f-ruolo',  params.get('ruolo')  || '');
+      setValueTruncated('f-nome',   'counter-nome',   MAX_NOME,  params.get('nome')   || '');
+      setValueTruncated('f-ruolo',  'counter-ruolo',  MAX_RUOLO, params.get('ruolo')  || '');
       setValue('f-mobile', params.get('mobile') || '');
       setValue('f-email',  params.get('email')  || '');
       const sedeParam = params.get('sede') || '';
@@ -245,11 +281,20 @@
       document.getElementById(id).value = decodeURIComponent(val);
     }
 
+    function setValueTruncated(inputId, counterId, max, val) {
+      const decoded = decodeURIComponent(val).slice(0, max);
+      document.getElementById(inputId).value = decoded;
+      // aggiorna contatore
+      const counter = document.getElementById(counterId);
+      const right   = counter.querySelector('span:last-child');
+      right.textContent = decoded.length + ' / ' + max;
+    }
+
     // ─── Canvas ───────────────────────────────────────────────────────────────
     function getData() {
       return {
-        nome:   document.getElementById('f-nome').value.trim(),
-        ruolo:  document.getElementById('f-ruolo').value.trim(),
+        nome:   document.getElementById('f-nome').value.trim().slice(0, MAX_NOME),
+        ruolo:  document.getElementById('f-ruolo').value.trim().slice(0, MAX_RUOLO),
         mobile: document.getElementById('f-mobile').value.trim(),
         email:  document.getElementById('f-email').value.trim(),
         sede:   document.getElementById('f-sede').value,
@@ -267,21 +312,41 @@
         ctx.fillStyle = '#fdc400';
         ctx.fillRect(0, 0, 9, H);
       }
+
+      // Nome completo — max larghezza area blu ~420px (su canvas 900px)
       if (d.nome) {
-        ctx.font = 'bold 54px "Assistant", Arial, sans-serif';
         ctx.fillStyle = '#ffffff';
+        ctx.font = 'bold 54px "Assistant", Arial, sans-serif';
+        const maxW = 390;
+        let fontSize = 54;
+        while (ctx.measureText(d.nome).width > maxW && fontSize > 28) {
+          fontSize--;
+          ctx.font = 'bold ' + fontSize + 'px "Assistant", Arial, sans-serif';
+        }
         ctx.fillText(d.nome, 52, 122);
       }
+
+      // Posizione lavorativa — max larghezza area blu ~420px
       if (d.ruolo) {
-        ctx.font = 'bold 33px "Assistant", Arial, sans-serif';
         ctx.fillStyle = '#fdc400';
+        ctx.font = 'bold 33px "Assistant", Arial, sans-serif';
+        const maxW = 390;
+        let fontSize = 33;
+        while (ctx.measureText(d.ruolo).width > maxW && fontSize > 18) {
+          fontSize--;
+          ctx.font = 'bold ' + fontSize + 'px "Assistant", Arial, sans-serif';
+        }
         ctx.fillText(d.ruolo, 52, 170);
       }
+
+      // Mobile
       if (d.mobile) {
         ctx.font = '26px "Assistant", Arial, sans-serif';
         ctx.fillStyle = '#ffffff';
         ctx.fillText('Mobile: ' + d.mobile, 52, 242);
       }
+
+      // Email
       if (d.email) {
         ctx.font = '26px "Assistant", Arial, sans-serif';
         ctx.fillStyle = '#ffffff';
@@ -298,7 +363,7 @@
 
     function downloadPNG() {
       const d = getData();
-      if (!d.sede)             { alert('Seleziona la sede prima di scaricare.');              return; }
+      if (!d.sede)             { alert('Seleziona la sede prima di scaricare.');                return; }
       if (!d.nome && !d.email) { alert("Compila almeno il nome e l'email prima di scaricare."); return; }
 
       const btn = document.getElementById('btn-dl');
