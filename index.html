@@ -309,55 +309,70 @@
         ctx.fillRect(0, 0, 9, H);
       }
 
-      // x allineato a PLAX S.p.A. (striscia 8px + padding Canva s:20 = 28px)
-      const X = 28;
-      // larghezza max area blu: fino a x=440, meno X, meno margine destro 20px
-      const MAX_W = 440 - X - 20;  // = 392px
+      // x allineato a PLAX S.p.A. — scala proporzionale alla larghezza canvas
+      // Su canvas 900px: X=28. Se il PNG è diverso si scala automaticamente.
+      const scaleX = W / 900;
+      const X = Math.round(28 * scaleX);
+      // Area blu occupa ~49% della larghezza del canvas, con margine destro 20px scalato
+      const blueEnd = Math.round(W * 0.49);
+      const MAX_W = blueEnd - X - Math.round(20 * scaleX);
+
+      // Scala Y e font proporzionalmente alla risoluzione del PNG
+      const scaleY = H / 450;
+      const fNome   = Math.round(54 * scaleY);
+      const fNomeMin= Math.round(28 * scaleY);
+      const fRuolo  = Math.round(33 * scaleY);
+      const fRuoloMin=Math.round(14 * scaleY);
+      const fSmall  = Math.round(26 * scaleY);
+      const yNome   = Math.round(123 * scaleY);
+      const yRuolo  = Math.round(168 * scaleY);
+      const yMobile = Math.round(240 * scaleY);
+      const yEmail  = Math.round(278 * scaleY);
 
       // ── Nome completo — bianco, SEMPRE bold ──
       if (d.nome) {
-        let fontSize = 54;
+        let fontSize = fNome;
         ctx.font = 'bold ' + fontSize + 'px "Assistant", Arial, sans-serif';
-        while (ctx.measureText(d.nome).width > MAX_W && fontSize > 28) {
+        while (ctx.measureText(d.nome).width > MAX_W && fontSize > fNomeMin) {
           fontSize--;
           ctx.font = 'bold ' + fontSize + 'px "Assistant", Arial, sans-serif';
         }
         ctx.fillStyle = '#ffffff';
-        ctx.fillText(d.nome, X, 123);
+        ctx.fillText(d.nome, X, yNome);
       }
 
       // ── Posizione lavorativa — giallo, NON bold ──
       if (d.ruolo) {
-        let fontSize = 33;
+        let fontSize = fRuolo;
         ctx.font = fontSize + 'px "Assistant", Arial, sans-serif';
-        while (ctx.measureText(d.ruolo).width > MAX_W && fontSize > 14) {
+        while (ctx.measureText(d.ruolo).width > MAX_W && fontSize > fRuoloMin) {
           fontSize--;
           ctx.font = fontSize + 'px "Assistant", Arial, sans-serif';
         }
         ctx.fillStyle = '#fdc400';
-        ctx.fillText(d.ruolo, X, 168);
+        ctx.fillText(d.ruolo, X, yRuolo);
       }
 
       // ── Mobile — bianco, tronca se troppo lungo ──
       if (d.mobile) {
-        ctx.font = '26px "Assistant", Arial, sans-serif';
+        ctx.font = fSmall + 'px "Assistant", Arial, sans-serif';
         ctx.fillStyle = '#ffffff';
         let mobile = 'Mobile: ' + d.mobile;
         while (ctx.measureText(mobile).width > MAX_W && mobile.length > 10) {
           mobile = mobile.slice(0, -1);
         }
-        ctx.fillText(mobile, X, 240);
+        ctx.fillText(mobile, X, yMobile);
       }
 
       // ── Email — bianco, tronca se troppo lunga ──
       if (d.email) {
-        ctx.font = '26px "Assistant", Arial, sans-serif';
+        ctx.font = fSmall + 'px "Assistant", Arial, sans-serif';
         ctx.fillStyle = '#ffffff';
         let email = 'Email: ' + d.email;
         while (ctx.measureText(email).width > MAX_W && email.length > 10) {
           email = email.slice(0, -1);
         }
-        ctx.fillText(email, X, 278);
+        ctx.fillText(email, X, yEmail);
       }
     }
 
