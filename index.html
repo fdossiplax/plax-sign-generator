@@ -314,8 +314,10 @@
       const scaleX = W / 900;
       const X = Math.round(28 * scaleX);
       // Area blu occupa ~49% della larghezza del canvas, con margine destro 20px scalato
-      const blueEnd = Math.round(W * 0.49);
-      const MAX_W = blueEnd - X - Math.round(20 * scaleX);
+      // Area blu occupa ~45.1% della larghezza (misurato sul PNG reale)
+      const blueEnd = Math.round(W * 0.451);
+      // Margine destro 30px (scalato) per sicurezza
+      const MAX_W = blueEnd - X - Math.round(30 * scaleX);
 
       // Scala Y e font proporzionalmente alla risoluzione del PNG
       const scaleY = H / 450;
